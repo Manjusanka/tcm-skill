@@ -24,7 +24,7 @@ For complex PDFs, route by page or region instead of forcing one parser:
 6. Deduplicate by semantic content and collapse versions by `logical_chunk_id` before reranking.
 7. Rerank at query-passage granularity and retain a small evidence set. Expand the parent or neighboring chunk only after selection.
 
-More candidates are not always better. Large TopK increases reranker cost, latency, duplicate evidence, context competition, and the chance of admitting plausible but wrong passages. Tune candidate and final TopK independently using Recall@K, nDCG/MRR, answer correctness, citation faithfulness, latency, and token cost.
+More candidates are not always better. Large TopK increases reranker cost, latency, duplicate evidence, context competition, and the chance of admitting plausible but wrong passages. Use `scripts/adaptive_retrieval.py` to allocate a bounded per-query budget from ambiguity, exact-token need, multi-hop need, risk, evidence gap, and load. The fixed values in `skill.yaml` are ceilings and rollback defaults. Tune candidate and final TopK independently using Recall@K, nDCG/MRR, answer correctness, citation faithfulness, latency, and token cost.
 
 ## Metadata as an active signal
 
@@ -47,4 +47,4 @@ Store `source_turn_id`, confirmation state, expiry, and `supersedes` links. Neve
 
 ## Context assembly order
 
-Assemble: system/safety rules -> normalized user request -> relevant confirmed memory -> current evidence -> normalized tool results -> output constraints. Keep source boundaries explicit. Reserve output capacity first and drop low-value context by marginal evidence gain, not by truncating the middle of a citation.
+Assemble: system/safety rules -> normalized user request -> relevant confirmed memory -> evidence ledger -> normalized tool results -> output constraints. Keep source boundaries explicit. Reserve output capacity first. Use `scripts/context_compiler.py` or an equivalent implementation to maximize marginal claim coverage per token while keeping evidence atomic; never truncate the middle of a citation, table row, dosage expression, or negated statement.
