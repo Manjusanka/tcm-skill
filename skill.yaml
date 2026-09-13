@@ -1,7 +1,28 @@
-schema_version: "1.0"
+schema_version: "2.0"
 name: "tcm-safe-knowledge-qa"
-version: "1.0.0"
+version: "2.0.0"
 language: "zh-CN"
+
+runtime:
+  framework: "agnostic"
+  orchestration: "capability_graph"
+  capability_graph: "references/capability-graph.yaml"
+  policy_mode: "deterministic_first"
+  model_role: "semantic_reasoning_only"
+  portable_entrypoints:
+    policy: "scripts/policy_engine.py"
+    retrieval_budget: "scripts/adaptive_retrieval.py"
+    tool_gateway: "scripts/tool_gateway.py"
+    evidence_guard: "scripts/evidence_guard.py"
+
+contracts:
+  query: "schemas/query.schema.json"
+  semantic_signals: "schemas/semantic-signals.schema.json"
+  decision: "schemas/decision.schema.json"
+  tool_plan: "schemas/tool-plan.schema.json"
+  tool_result: "schemas/tool-result.schema.json"
+  evidence_ledger: "schemas/evidence-ledger.schema.json"
+  answer: "schemas/answer.schema.json"
 
 routing:
   ordinary_read_execute_threshold: 0.75
@@ -10,6 +31,7 @@ routing:
   require_confirmation_for_writes: true
 
 retrieval:
+  strategy: "adaptive_budget"
   vector_top_k: 40
   keyword_top_k: 30
   graph_source_top_k: 10
@@ -19,6 +41,17 @@ retrieval:
   rrf_k: 60
   active_release_only: true
   collapse_by: "logical_chunk_id"
+  budget:
+    base_vector_k: 24
+    base_keyword_k: 16
+    base_fused_limit: 32
+    base_rerank_k: 6
+    max_vector_k: 48
+    max_keyword_k: 36
+    max_graph_k: 12
+    max_fused_limit: 64
+    max_rerank_k: 10
+    high_risk_min_sources: 2
 
 chunking:
   target_tokens: 350
@@ -36,8 +69,20 @@ context:
   tool_result_max_tokens: 1200
   keep_recent_turns: 5
   summarize_after_turns: 15
+  compiler:
+    selection: "marginal_claim_coverage"
+    preserve_atomic_evidence: true
+    reject_embedded_instructions: true
+    section_order:
+      - "policy"
+      - "request"
+      - "confirmed_memory"
+      - "evidence_ledger"
+      - "tool_results"
+      - "output_contract"
 
 tools:
+  protocol: "plan_validate_execute"
   max_agent_steps: 4
   max_total_calls: 6
   max_same_tool_calls: 2
@@ -46,6 +91,8 @@ tools:
   transient_read_retries: 2
   retry_backoff_ms: [200, 500]
   no_retry_statuses: [401, 403]
+  require_declared_side_effect: true
+  write_mode: "explicit_confirmation_and_idempotency"
 
 safety:
   current_status: "ACTIVE"
@@ -57,8 +104,14 @@ safety:
     - "unsafe_prescription"
     - "fabricated_citation"
     - "ignored_contraindication"
+  evidence_guard:
+    reject_unknown_citations: true
+    reject_unauthorized_evidence: true
+    reject_obsolete_release: true
+    authoritative_source_for_high_risk: true
 
 observability:
+  replayable_decisions: true
   trace_fields:
     - "trace_id"
     - "skill_version"
@@ -70,3 +123,6 @@ observability:
     - "tool_calls"
     - "latency_ms"
     - "safety_flags"
+    - "decision_reason_codes"
+    - "policy_version"
+    - "evidence_ledger_hash"
