@@ -1,0 +1,71 @@
+version: "2.0.0"
+entry: "permission_gate"
+terminal_states: ["respond", "partial", "refuse", "escalate"]
+limits:
+  max_agent_steps: 4
+  max_total_tool_calls: 6
+  max_repairs: 1
+
+nodes:
+  permission_gate:
+    type: "deterministic_policy"
+  risk_gate:
+    type: "deterministic_policy"
+  route:
+    type: "deterministic_policy"
+  retrieve:
+    type: "capability"
+  graph:
+    type: "capability"
+  memory:
+    type: "capability"
+  tool_plan:
+    type: "semantic_plan"
+  tool_validate:
+    type: "deterministic_policy"
+  tool_execute:
+    type: "capability"
+  evidence_ledger:
+    type: "deterministic_transform"
+  context_compile:
+    type: "deterministic_transform"
+  generate:
+    type: "semantic_generation"
+  evidence_guard:
+    type: "deterministic_policy"
+  repair:
+    type: "semantic_generation"
+  respond:
+    type: "terminal"
+  partial:
+    type: "terminal"
+  refuse:
+    type: "terminal"
+  escalate:
+    type: "terminal"
+
+transitions:
+  - {from: "permission_gate", to: "refuse", when: "permission_denied"}
+  - {from: "permission_gate", to: "risk_gate", when: "permission_ok"}
+  - {from: "risk_gate", to: "escalate", when: "emergency"}
+  - {from: "risk_gate", to: "route", when: "non_emergency"}
+  - {from: "route", to: "retrieve", when: "needs_documents"}
+  - {from: "route", to: "graph", when: "needs_multi_hop"}
+  - {from: "route", to: "memory", when: "needs_confirmed_history"}
+  - {from: "route", to: "tool_plan", when: "needs_current_or_exact_state"}
+  - {from: "tool_plan", to: "tool_validate", when: "plan_ready"}
+  - {from: "tool_validate", to: "tool_execute", when: "allowed_and_valid"}
+  - {from: "tool_validate", to: "refuse", when: "not_authorized"}
+  - {from: "retrieve", to: "evidence_ledger", when: "complete_or_partial"}
+  - {from: "graph", to: "evidence_ledger", when: "source_chunks_recovered"}
+  - {from: "memory", to: "evidence_ledger", when: "confirmed_and_relevant"}
+  - {from: "tool_execute", to: "evidence_ledger", when: "normalized"}
+  - {from: "evidence_ledger", to: "context_compile", when: "authorized_current_evidence"}
+  - {from: "context_compile", to: "generate", when: "budget_satisfied"}
+  - {from: "context_compile", to: "partial", when: "mandatory_evidence_exceeds_budget"}
+  - {from: "generate", to: "evidence_guard", when: "answer_structured"}
+  - {from: "evidence_guard", to: "respond", when: "pass"}
+  - {from: "evidence_guard", to: "repair", when: "repairable_and_repairs_remaining"}
+  - {from: "evidence_guard", to: "partial", when: "insufficient_evidence"}
+  - {from: "evidence_guard", to: "escalate", when: "high_risk_failure"}
+  - {from: "repair", to: "evidence_guard", when: "repair_complete"}
