@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/tcm-safe-knowledge-qa/answer.schema.json",
+  "title": "TCM Safe Knowledge QA Answer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["conclusion", "supporting_points", "citations", "risk_level", "disposition"],
+  "properties": {
+    "conclusion": {"type": "string"},
+    "supporting_points": {"type": "array", "items": {"type": "string"}},
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_id", "source_title", "release_id"],
+        "properties": {
+          "evidence_id": {"type": "string"},
+          "source_title": {"type": "string"},
+          "section_or_page": {"type": ["string", "null"]},
+          "document_version": {"type": ["string", "null"]},
+          "release_id": {"type": "string"},
+          "retrieved_at": {"type": ["string", "null"], "format": "date-time"}
+        }
+      }
+    },
+    "uncertainty": {"type": "array", "items": {"type": "string"}},
+    "conflicts": {"type": "array", "items": {"type": "string"}},
+    "risk_level": {"enum": ["low", "medium", "high", "critical"]},
+    "disposition": {"enum": ["answer", "clarify", "partial", "refuse", "escalate"]},
+    "safety_note": {"type": ["string", "null"]},
+    "trace_id": {"type": ["string", "null"]}
+  }
+}
