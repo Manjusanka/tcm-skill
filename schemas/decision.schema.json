@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/tcm-safe-knowledge-qa/decision.schema.json",
+  "title": "Portable Skill Decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["risk_level", "route", "confidence", "reason_codes", "retrieval_budget", "requires_human"],
+  "properties": {
+    "risk_level": {"enum": ["low", "medium", "high", "critical"]},
+    "route": {"enum": ["retrieve", "graph", "tool", "memory", "hybrid", "clarify", "refuse", "emergency"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "reason_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "allowed_tool_families": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "retrieval_budget": {"type": "object"},
+    "requires_human": {"type": "boolean"},
+    "policy_version": {"type": "string"}
+  }
+}
