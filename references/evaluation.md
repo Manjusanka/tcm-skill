@@ -8,7 +8,7 @@ Annotate expected intent, required facts, acceptable source chunks, unsafe actio
 
 ## Stage metrics
 
-Do not judge the entire system with one score.
+Do not judge the entire system with one score. Store the first failing stage for each case: semantic extraction, policy, permission/version filter, recall, fusion, rerank, tool validation, tool execution, context compile, generation, or evidence guard.
 
 - routing: intent macro-F1, tool selection accuracy, unnecessary-call rate;
 - retrieval: Recall@K, MRR/nDCG, version accuracy, ACL violation count, duplicate rate;
@@ -23,7 +23,7 @@ For real user queries, also measure task completion, reformulation rate, escalat
 
 ## Experiment design
 
-Change one major variable at a time: chunking, filters, candidate TopK, fusion, reranker, context budget, prompt, or model. Compare against the same frozen set and report confidence intervals or repeated-run variance for stochastic generation. Inspect failures by stage; an answer failure with correct retrieval is not a retrieval failure.
+Change one major variable at a time: chunking, filters, candidate TopK, fusion, reranker, context budget, prompt, policy, or model. Compare against the same frozen set and report confidence intervals or repeated-run variance for stochastic generation. Replay the saved semantic signals, policy version, release ID, candidate IDs, selected context, tool results, and claim-evidence edges. Inspect failures by stage; an answer failure with correct retrieval is not a retrieval failure.
 
 The numerical settings in `skill.yaml` are initial engineering defaults, not claimed production benchmarks. Tune them on the target corpus and hardware.
 
