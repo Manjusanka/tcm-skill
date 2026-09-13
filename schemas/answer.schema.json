@@ -4,16 +4,29 @@
   "title": "TCM Safe Knowledge QA Answer",
   "type": "object",
   "additionalProperties": false,
-  "required": ["conclusion", "supporting_points", "citations", "risk_level", "disposition"],
+  "required": ["conclusion", "claims", "citations", "risk_level", "disposition"],
   "properties": {
     "conclusion": {"type": "string"},
-    "supporting_points": {"type": "array", "items": {"type": "string"}},
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim_id", "text", "kind", "evidence_ids"],
+        "properties": {
+          "claim_id": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["factual", "dosage", "contraindication", "interaction", "inference", "uncertainty", "safety_advice"]},
+          "evidence_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+        }
+      }
+    },
     "citations": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["evidence_id", "source_title", "release_id"],
+        "required": ["evidence_id", "source_title", "document_version", "release_id"],
         "properties": {
           "evidence_id": {"type": "string"},
           "source_title": {"type": "string"},
