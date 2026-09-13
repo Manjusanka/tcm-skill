@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/tcm-safe-knowledge-qa/evidence-ledger.schema.json",
+  "title": "Evidence Ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "active_release_id", "evidence"],
+  "properties": {
+    "tenant_id": {"type": "string", "minLength": 1},
+    "active_release_id": {"type": "string", "minLength": 1},
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_id", "release_id", "status", "authorized", "authoritative", "content_hash"],
+        "properties": {
+          "evidence_id": {"type": "string", "minLength": 1},
+          "source_title": {"type": "string"},
+          "release_id": {"type": "string", "minLength": 1},
+          "document_version": {"type": ["string", "null"]},
+          "status": {"enum": ["ACTIVE", "DEPRECATED", "TOMBSTONED"]},
+          "authorized": {"type": "boolean"},
+          "authoritative": {"type": "boolean"},
+          "reviewed": {"type": "boolean"},
+          "independence_group": {"type": ["string", "null"]},
+          "content_hash": {"type": "string", "minLength": 8},
+          "retrieved_at": {"type": ["string", "null"], "format": "date-time"}
+        }
+      }
+    }
+  }
+}
