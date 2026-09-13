@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/tcm-safe-knowledge-qa/tool-result.schema.json",
+  "title": "Normalized Tool Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "source", "truncated", "instructions_ignored"],
+  "properties": {
+    "status": {"enum": ["ok", "partial", "error"]},
+    "data": {},
+    "source": {"type": "string", "minLength": 1},
+    "version": {"type": ["string", "null"]},
+    "updated_at": {"type": ["string", "null"], "format": "date-time"},
+    "error_code": {"type": ["string", "null"]},
+    "truncated": {"type": "boolean"},
+    "instructions_ignored": {"type": "boolean"},
+    "trace_id": {"type": "string"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "error"}}},
+      "then": {"required": ["error_code"]}
+    }
+  ]
+}
