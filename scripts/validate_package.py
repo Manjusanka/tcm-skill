@@ -26,11 +26,19 @@ def load_json(path: Path) -> object:
         return json.load(handle)
 
 
+def load_yaml(path: Path) -> object:
+    with path.open("r", encoding="utf-8") as handle:
+        return yaml.safe_load(handle)
+
+
 def validate_skill_config() -> dict:
-    with (ROOT / "skill.yaml").open("r", encoding="utf-8") as handle:
-        config = yaml.safe_load(handle)
+    config = load_yaml(ROOT / "skill.yaml")
 
     require(config["name"] == ROOT.name, "skill.yaml name must match the folder name")
+    require(config["schema_version"] == "2.0", "schema_version must be 2.0")
+    require(config["runtime"]["framework"] == "agnostic", "runtime must be framework agnostic")
+    for contract_name, relative_path in config["contracts"].items():
+        require((ROOT / relative_path).is_file(), f"missing {contract_name} contract: {relative_path}")
     routing = config["routing"]
     require(
         0 <= routing["clarification_threshold"]
@@ -103,8 +111,24 @@ def validate_json_schemas() -> int:
         )
         require("title" in schema and "type" in schema, f"{path.name} lacks title or type")
         count += 1
-    require(count >= 3, "expected at least three JSON Schemas")
+    require(count >= 7, "expected at least seven JSON Schemas")
     return count
+
+
+def validate_capability_graph() -> int:
+    graph = load_yaml(ROOT / "references" / "capability-graph.yaml")
+    nodes = graph["nodes"]
+    require(graph["entry"] in nodes, "capability graph entry node does not exist")
+    for terminal in graph["terminal_states"]:
+        require(terminal in nodes, f"terminal node does not exist: {terminal}")
+        require(nodes[terminal]["type"] == "terminal", f"terminal has wrong type: {terminal}")
+    transitions = graph["transitions"]
+    for transition in transitions:
+        require(transition["from"] in nodes, f"unknown transition source: {transition['from']}")
+        require(transition["to"] in nodes, f"unknown transition target: {transition['to']}")
+        require(bool(transition.get("when")), "every transition requires a condition")
+    require(graph["limits"]["max_repairs"] == 1, "repair loop must be bounded to one retry")
+    return len(transitions)
 
 
 def validate_eval_cases() -> int:
@@ -129,7 +153,7 @@ def validate_eval_cases() -> int:
             )
             ids.add(case["id"])
             count += 1
-    require(count >= 8, "expected at least eight smoke evaluation cases")
+    require(count >= 12, "expected at least twelve smoke evaluation cases")
     return count
 
 
@@ -143,6 +167,14 @@ def validate_required_files() -> None:
         "references/safety-and-versioning.md",
         "references/evaluation.md",
         "references/prompt-templates.md",
+        "references/framework-neutral-architecture.md",
+        "references/capability-graph.yaml",
+        "docs/skill-v2-innovation-interview-guide.md",
+        "scripts/adaptive_retrieval.py",
+        "scripts/policy_engine.py",
+        "scripts/context_compiler.py",
+        "scripts/tool_gateway.py",
+        "scripts/evidence_guard.py",
     ]
     for relative in required:
         require((ROOT / relative).is_file(), f"missing required file: {relative}")
@@ -154,6 +186,7 @@ def main() -> int:
         config = validate_skill_config()
         schema_count = validate_json_schemas()
         eval_count = validate_eval_cases()
+        transition_count = validate_capability_graph()
     except (KeyError, TypeError, ValueError, json.JSONDecodeError, yaml.YAMLError) as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1
@@ -161,7 +194,8 @@ def main() -> int:
     print(
         "OK: validated "
         f"{config['name']} v{config['version']}; "
-        f"{schema_count} schemas; {eval_count} evaluation cases"
+        f"{schema_count} schemas; {eval_count} evaluation cases; "
+        f"{transition_count} capability transitions"
     )
     return 0
 
