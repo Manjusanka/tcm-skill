@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/tcm-safe-knowledge-qa/query.schema.json",
+  "title": "TCM Safe Knowledge QA Query",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["query", "tenant_id", "user_id", "mode"],
+  "properties": {
+    "query": {"type": "string", "minLength": 1, "maxLength": 8000},
+    "tenant_id": {"type": "string", "minLength": 1},
+    "user_id": {"type": "string", "minLength": 1},
+    "conversation_id": {"type": "string"},
+    "mode": {"enum": ["answer", "audit", "design"]},
+    "knowledge_release_id": {"type": "string"},
+    "allowed_tool_families": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string"}
+    },
+    "metadata_filters": {"type": "object"}
+  }
+}
