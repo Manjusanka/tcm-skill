@@ -1,0 +1,72 @@
+schema_version: "1.0"
+name: "tcm-safe-knowledge-qa"
+version: "1.0.0"
+language: "zh-CN"
+
+routing:
+  ordinary_read_execute_threshold: 0.75
+  clarification_threshold: 0.55
+  high_risk_execute_threshold: 0.90
+  require_confirmation_for_writes: true
+
+retrieval:
+  vector_top_k: 40
+  keyword_top_k: 30
+  graph_source_top_k: 10
+  fused_candidate_limit: 60
+  rerank_top_k: 8
+  fusion: "rrf"
+  rrf_k: 60
+  active_release_only: true
+  collapse_by: "logical_chunk_id"
+
+chunking:
+  target_tokens: 350
+  soft_max_tokens: 450
+  hard_max_tokens: 480
+  min_tokens: 80
+  overlap_tokens: 50
+  parent_target_tokens: 1200
+
+context:
+  total_tokens: 8192
+  output_reserve_tokens: 1024
+  evidence_max_tokens: 4096
+  memory_max_tokens: 2048
+  tool_result_max_tokens: 1200
+  keep_recent_turns: 5
+  summarize_after_turns: 15
+
+tools:
+  max_agent_steps: 4
+  max_total_calls: 6
+  max_same_tool_calls: 2
+  max_parallel_calls: 3
+  max_rows_per_result: 50
+  transient_read_retries: 2
+  retry_backoff_ms: [200, 500]
+  no_retry_statuses: [401, 403]
+
+safety:
+  current_status: "ACTIVE"
+  reject_retrieved_instructions: true
+  require_citations_for_medical_claims: true
+  require_human_escalation_for_high_risk: true
+  critical_failures:
+    - "cross_tenant_leak"
+    - "unsafe_prescription"
+    - "fabricated_citation"
+    - "ignored_contraindication"
+
+observability:
+  trace_fields:
+    - "trace_id"
+    - "skill_version"
+    - "prompt_version"
+    - "model_version"
+    - "knowledge_release_id"
+    - "retrieval_candidates"
+    - "selected_evidence_ids"
+    - "tool_calls"
+    - "latency_ms"
+    - "safety_flags"
