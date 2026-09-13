@@ -23,10 +23,13 @@ class PackageContractTest(unittest.TestCase):
         self.assertEqual(config["name"], "tcm-safe-knowledge-qa")
 
     def test_json_schemas(self) -> None:
-        self.assertGreaterEqual(VALIDATOR.validate_json_schemas(), 3)
+        self.assertGreaterEqual(VALIDATOR.validate_json_schemas(), 7)
 
     def test_eval_cases(self) -> None:
-        self.assertGreaterEqual(VALIDATOR.validate_eval_cases(), 8)
+        self.assertGreaterEqual(VALIDATOR.validate_eval_cases(), 12)
+
+    def test_capability_graph(self) -> None:
+        self.assertGreaterEqual(VALIDATOR.validate_capability_graph(), 20)
 
 
 if __name__ == "__main__":
